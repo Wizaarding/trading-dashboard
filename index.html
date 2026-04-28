@@ -188,8 +188,11 @@ function updateClock() {
 
 async function fetchStockData(ticker) {
   try {
-    const res = await fetch(`https://query1.finance.yahoo.com/v8/finance/chart/${ticker}?interval=1d&range=3mo`)
-    const data = await res.json()
+    const url = `https://query1.finance.yahoo.com/v8/finance/chart/${ticker}?interval=1d&range=3mo&cors=true`
+    const proxy = `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`
+    const res = await fetch(proxy)
+    const json = await res.json()
+    const data = JSON.parse(json.contents)
     const closes = data.chart.result[0].indicators.quote[0].close.filter(Boolean)
     const volumes = data.chart.result[0].indicators.quote[0].volume.filter(Boolean)
     const price = closes[closes.length - 1]
