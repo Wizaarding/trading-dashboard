@@ -106,7 +106,6 @@ const STOCKS = [
   { ticker: 'MU',   name: 'Micron Technology' },
   { ticker: 'ASML', name: 'ASML Holding' },
 ];
-
 function checkPwd() {
   const val = document.getElementById('pwd-input').value;
   if (val === PASSWORD) {
@@ -118,13 +117,11 @@ function checkPwd() {
     document.getElementById('pwd-input').value = '';
   }
 }
-
 function getRSIColor(rsi) {
   if (rsi >= 70) return '#E24B4A';
   if (rsi >= 55) return '#BA7517';
   return '#1D9E75';
 }
-
 function getSignal(rsi, uptrend) {
   if (!uptrend) return { text: 'No uptrend yet', cls: 'signal-hold' };
   if (rsi >= 70) return { text: 'Wait for dip', cls: 'signal-hold' };
@@ -132,13 +129,11 @@ function getSignal(rsi, uptrend) {
   if (rsi >= 35) return { text: 'Dip buy zone!', cls: 'signal-buy' };
   return { text: 'Oversold — wait', cls: 'signal-hold' };
 }
-
 function isMarketOpen() {
   const ny = new Date(new Date().toLocaleString('en-US', { timeZone: 'America/New_York' }));
   const mins = ny.getHours() * 60 + ny.getMinutes();
   return ny.getDay() >= 1 && ny.getDay() <= 5 && mins >= 570 && mins < 960;
 }
-
 function updateClock() {
   const uae = new Date().toLocaleString('en-US', { timeZone: 'Asia/Dubai', hour: '2-digit', minute: '2-digit', hour12: true });
   document.getElementById('uae-time').textContent = uae;
@@ -147,7 +142,6 @@ function updateClock() {
   ms.textContent = open ? 'Open' : 'Closed';
   ms.className = open ? 'market-open' : 'market-closed';
 }
-
 async function fetchStockData(ticker) {
   try {
     const res = await fetch('https://api.twelvedata.com/time_series?symbol=' + ticker + '&interval=1day&outputsize=60&apikey=' + API_KEY);
@@ -178,7 +172,6 @@ async function fetchStockData(ticker) {
       nearFib382: Math.abs(price-fib382)/fib382 < 0.02 };
   } catch(e) { return null; }
 }
-
 function renderStock(stock, data) {
   if (!data) return '<div class="stock-card hold"><div class="stock-top"><div class="stock-info"><h2>' + stock.ticker + '</h2><p>' + stock.name + '</p></div></div><p style="font-size:12px;color:#bbb">Could not load — tap Refresh</p></div>';
   const signal = getSignal(data.rsi, data.uptrend);
@@ -203,7 +196,6 @@ function renderStock(stock, data) {
     '<button class="btn btn-sarwa-sell" onclick="alert(\'Open Sarwa app\nSearch: ' + stock.ticker + '\nAction: SELL\')">Sell in Sarwa</button>' +
     '</div></div>';
 }
-
 async function loadStocks() {
   document.getElementById('stocks-container').innerHTML = '<div class="loading">Fetching live data...</div>';
   const results = await Promise.all(STOCKS.map(s => fetchStockData(s.ticker)));
@@ -212,7 +204,6 @@ async function loadStocks() {
   document.getElementById('last-update').textContent = 'Last updated: ' + now + ' UAE';
   document.getElementById('last-update-header').textContent = 'Updated ' + now;
 }
-
 function startApp() {
   loadStocks();
   updateClock();
