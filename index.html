@@ -198,7 +198,12 @@ function renderStock(stock, data) {
 }
 async function loadStocks() {
   document.getElementById('stocks-container').innerHTML = '<div class="loading">Fetching live data...</div>';
-  const results = await Promise.all(STOCKS.map(s => fetchStockData(s.ticker)));
+  const results = [];
+  for (const stock of STOCKS) {
+    const data = await fetchStockData(stock.ticker);
+    results.push(data);
+    await new Promise(r => setTimeout(r, 1500));
+  }
   document.getElementById('stocks-container').innerHTML = STOCKS.map((s,i) => renderStock(s, results[i])).join('');
   const now = new Date().toLocaleString('en-US', { timeZone: 'Asia/Dubai', hour: '2-digit', minute: '2-digit', hour12: true });
   document.getElementById('last-update').textContent = 'Last updated: ' + now + ' UAE';
