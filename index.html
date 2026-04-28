@@ -98,6 +98,7 @@
 </div>
 <script>
 const PASSWORD = 'mariam2026';
+const API_KEY = '273dfdb135a2444d8ae5c024518686c2';
 const STOCKS = [
   { ticker: 'AMD',  name: 'Advanced Micro Devices' },
   { ticker: 'AVGO', name: 'Broadcom Inc.' },
@@ -149,13 +150,12 @@ function updateClock() {
 
 async function fetchStockData(ticker) {
   try {
-    const res = await fetch('/api/stocks?ticker=' + ticker);
-    if (!res.ok) return null;
+    const res = await fetch('https://api.twelvedata.com/time_series?symbol=' + ticker + '&interval=1day&outputsize=60&apikey=' + API_KEY);
     const data = await res.json();
-    if (!data.chart || !data.chart.result) return null;
-    const q = data.chart.result[0].indicators.quote[0];
-    const closes = q.close.filter(Boolean);
-    const volumes = q.volume.filter(Boolean);
+    if (!data.values || data.values.length < 50) return null;
+    const values = data.values.reverse();
+    const closes = values.map(v => parseFloat(v.close));
+    const volumes = values.map(v => parseFloat(v.volume));
     const price = closes[closes.length - 1];
     const change = ((price - closes[closes.length - 2]) / closes[closes.length - 2] * 100).toFixed(2);
     const sma50 = closes.slice(-50).reduce((a,b)=>a+b,0)/50;
@@ -178,6 +178,7 @@ async function fetchStockData(ticker) {
       nearFib382: Math.abs(price-fib382)/fib382 < 0.02 };
   } catch(e) { return null; }
 }
+
 function renderStock(stock, data) {
   if (!data) return '<div class="stock-card hold"><div class="stock-top"><div class="stock-info"><h2>' + stock.ticker + '</h2><p>' + stock.name + '</p></div></div><p style="font-size:12px;color:#bbb">Could not load — tap Refresh</p></div>';
   const signal = getSignal(data.rsi, data.uptrend);
