@@ -148,47 +148,36 @@ function updateClock() {
 }
 
 async function fetchStockData(ticker) {
-  const proxies = [
-    'https://api.allorigins.win/raw?url=',
-    'https://corsproxy.io/?',
-    'https://proxy.cors.sh/',
-  ];
-  const yahooUrl = 'https://query1.finance.yahoo.com/v8/finance/chart/' + ticker + '?interval=1d&range=3mo';
-  
-  for (const proxy of proxies) {
-    try {
-      const res = await fetch(proxy + encodeURIComponent(yahooUrl));
-      if (!res.ok) continue;
-      const data = await res.json();
-      if (!data.chart || !data.chart.result) continue;
-      const q = data.chart.result[0].indicators.quote[0];
-      const closes = q.close.filter(Boolean);
-      const volumes = q.volume.filter(Boolean);
-      const price = closes[closes.length - 1];
-      const change = ((price - closes[closes.length - 2]) / closes[closes.length - 2] * 100).toFixed(2);
-      const sma50 = closes.slice(-50).reduce((a,b)=>a+b,0)/50;
-      const uptrend = price > sma50;
-      const deltas = closes.map((c,i)=>i===0?0:c-closes[i-1]);
-      const avgGain = deltas.map(d=>d>0?d:0).slice(-14).reduce((a,b)=>a+b,0)/14;
-      const avgLoss = deltas.map(d=>d<0?-d:0).slice(-14).reduce((a,b)=>a+b,0)/14;
-      const rsi = Math.round(100-(100/(1+(avgGain/(avgLoss||0.001)))));
-      const volAvg = volumes.slice(-20).reduce((a,b)=>a+b,0)/20;
-      const volSpike = volumes[volumes.length-1] > volAvg * 1.2;
-      const high50 = Math.max(...closes.slice(-50));
-      const low50 = Math.min(...closes.slice(-50));
-      const diff = high50 - low50;
-      const fib382 = (high50-diff*0.382).toFixed(2);
-      const fib500 = (high50-diff*0.500).toFixed(2);
-      const fib618 = (high50-diff*0.618).toFixed(2);
-      return { price: price.toFixed(2), change, rsi, uptrend, volSpike, fib382, fib500, fib618,
-        nearFib618: Math.abs(price-fib618)/fib618 < 0.02,
-        nearFib500: Math.abs(price-fib500)/fib500 < 0.02,
-        nearFib382: Math.abs(price-fib382)/fib382 < 0.02 };
-    } catch(e) { continue; }
-  }
-  return null;
+  try {
+    const res = await fetch('/api/stocks?ticker=' + ticker);
+    if (!res.ok) return null;
+    const data = await res.json();
+    if (!data.chart || !data.chart.result) return null;
+    const q = data.chart.result[0].indicators.quote[0];
+    const closes = q.close.filter(Boolean);
+    const volumes = q.volume.filter(Boolean);
+    const price = closes[closes.length - 1];
+    const change = ((price - closes[closes.length - 2]) / closes[closes.length - 2] * 100).toFixed(2);
+    const sma50 = closes.slice(-50).reduce((a,b)=>a+b,0)/50;
+    const uptrend = price > sma50;
+    const deltas = closes.map((c,i)=>i===0?0:c-closes[i-1]);
+    const avgGain = deltas.map(d=>d>0?d:0).slice(-14).reduce((a,b)=>a+b,0)/14;
+    const avgLoss = deltas.map(d=>d<0?-d:0).slice(-14).reduce((a,b)=>a+b,0)/14;
+    const rsi = Math.round(100-(100/(1+(avgGain/(avgLoss||0.001)))));
+    const volAvg = volumes.slice(-20).reduce((a,b)=>a+b,0)/20;
+    const volSpike = volumes[volumes.length-1] > volAvg * 1.2;
+    const high50 = Math.max(...closes.slice(-50));
+    const low50 = Math.min(...closes.slice(-50));
+    const diff = high50 - low50;
+    const fib382 = (high50-diff*0.382).toFixed(2);
+    const fib500 = (high50-diff*0.500).toFixed(2);
+    const fib618 = (high50-diff*0.618).toFixed(2);
+    return { price: price.toFixed(2), change, rsi, uptrend, volSpike, fib382, fib500, fib618,
+      nearFib618: Math.abs(price-fib618)/fib618 < 0.02,
+      nearFib500: Math.abs(price-fib500)/fib500 < 0.02,
+      nearFib382: Math.abs(price-fib382)/fib382 < 0.02 };
+  } catch(e) { return null; }
 }
-
 function renderStock(stock, data) {
   if (!data) return '<div class="stock-card hold"><div class="stock-top"><div class="stock-info"><h2>' + stock.ticker + '</h2><p>' + stock.name + '</p></div></div><p style="font-size:12px;color:#bbb">Could not load — tap Refresh</p></div>';
   const signal = getSignal(data.rsi, data.uptrend);
